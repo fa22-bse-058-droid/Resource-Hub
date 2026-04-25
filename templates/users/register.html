@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Resource Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="bg-canvas"><div class="stars"></div></div>
+
+<div class="auth-page">
+  <div class="auth-card fade-up">
+
+    <div class="auth-logo">
+      <div class="logo-mark">🚀</div>
+      <h2>Career<span style="color:var(--accent-blue)">AI</span></h2>
+      <p>Create your Resource Hub account</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'users:register' %}">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          class="form-input"
+          placeholder="Choose a username"
+          required
+          minlength="3"
+          maxlength="30"
+          autocomplete="username"
+          value="{{ form.username.value|default:'' }}"
+        >
+        {% if form.username.errors %}
+          <p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email <span style="color:var(--text-muted)">(optional)</span></label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          class="form-input"
+          placeholder="your@email.com"
+          autocomplete="email"
+          value="{{ form.email.value|default:'' }}"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password1">Password</label>
+        <div style="position:relative">
+          <input
+            type="password"
+            id="password1"
+            name="password1"
+            class="form-input"
+            placeholder="Choose a strong password"
+            required
+            minlength="8"
+            autocomplete="new-password"
+          >
+          <button type="button" onclick="togglePwd('password1')"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px">
+            👁
+          </button>
+        </div>
+        {% if form.password1.errors %}
+          <p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.password1.errors.0 }}</p>
+        {% endif %}
+        <!-- Strength meter -->
+        <div style="margin-top:6px">
+          <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden">
+            <div id="pwd-strength-bar" style="height:100%;width:0%;border-radius:999px;transition:all .3s"></div>
+          </div>
+          <p id="pwd-strength-label" style="font-size:11px;color:var(--text-muted);margin-top:3px"></p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password2">Confirm Password</label>
+        <div style="position:relative">
+          <input
+            type="password"
+            id="password2"
+            name="password2"
+            class="form-input"
+            placeholder="Repeat password"
+            required
+            autocomplete="new-password"
+          >
+          <button type="button" onclick="togglePwd('password2')"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px">
+            👁
+          </button>
+        </div>
+        {% if form.password2.errors %}
+          <p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.password2.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <button type="submit" class="auth-submit">Create Account →</button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account?
+      <a href="{% url 'users:login' %}">Sign in</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function togglePwd(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// Password strength meter
+document.getElementById('password1')?.addEventListener('input', function() {
+  const val = this.value;
+  let score = 0;
+  if (val.length >= 8)  score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const bar   = document.getElementById('pwd-strength-bar');
+  const label = document.getElementById('pwd-strength-label');
+  const configs = [
+    { pct: '0%',   color: 'transparent', text: '' },
+    { pct: '25%',  color: '#EF4444',     text: 'Weak' },
+    { pct: '50%',  color: '#F59E0B',     text: 'Fair' },
+    { pct: '75%',  color: '#3B82F6',     text: 'Good' },
+    { pct: '100%', color: '#10B981',     text: 'Strong 🔒' },
+  ];
+  const cfg = configs[val.length ? score + (score > 0 ? 0 : 0) : 0] || configs[0];
+  const finalCfg = val.length === 0 ? configs[0] : configs[Math.max(score, 1)];
+  bar.style.width = finalCfg.pct;
+  bar.style.background = finalCfg.color;
+  label.textContent = finalCfg.text;
+  label.style.color = finalCfg.color;
+});
+</script>
+</body>
+</html>

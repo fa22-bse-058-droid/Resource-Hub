@@ -1,0 +1,119 @@
+{% extends "resource_hub/base.html" %}
+{% load static %}
+
+{% block title %}{{ category_name|default:"Category" }} Resources{% endblock %}
+{% block nav_resources_active %}active{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-up">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <a href="{% url 'resource_hub:index' %}" style="color:var(--text-muted);font-size:13px;transition:var(--transition)"
+       onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--text-muted)'">
+      ← All Resources
+    </a>
+    <span style="color:var(--text-muted)">›</span>
+    <span style="font-size:13px;color:var(--text-secondary)">{{ category_name|default:"Category" }}</span>
+  </div>
+  <h1>
+    <span class="gradient-text">{{ category_name|default:"Category" }}</span>
+  </h1>
+  <p>Curated resources to level up your skills in {{ category_name|default:"this topic" }}</p>
+</div>
+
+<!-- Inline search for this category -->
+<div class="search-section fade-up fade-up-1">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <div class="search-wrapper" style="flex:1;min-width:260px">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Search within {{ category_name|default:"category" }}..."
+        autocomplete="off"
+      >
+    </div>
+    <button id="search-btn" class="btn-primary">🔍 Search</button>
+  </div>
+
+  <div class="filters-row">
+    <select id="filter-level" class="filter-select">
+      <option value="">All Levels</option>
+      <option value="beginner">Beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="advanced">Advanced</option>
+    </select>
+    <select id="filter-type" class="filter-select">
+      <option value="">All Types</option>
+      <option value="course">Course</option>
+      <option value="video">Video</option>
+      <option value="article">Article</option>
+      <option value="practice">Practice</option>
+    </select>
+    <span class="results-count" id="results-count"></span>
+  </div>
+</div>
+
+<div class="fade-up fade-up-2">
+  <div class="resources-grid" id="resources-grid">
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">⏳</div>
+      <h3>Loading...</h3>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Pre-set category filter for this page
+  document.addEventListener('DOMContentLoaded', () => {
+    const catSel = document.getElementById('filter-category');
+    // category select not present here; we pass it via URL param
+    // Override buildParams to inject the category
+    const catName = "{{ category_name|escapejs }}";
+    const origBuild = IndexPage.prototype?.buildParams;
+    // Simpler: patch the search to always include category
+    const searchInput = document.getElementById('search-input');
+    const searchBtn   = document.getElementById('search-btn');
+    const levelSel    = document.getElementById('filter-level');
+    const typeSel     = document.getElementById('filter-type');
+    const resultsGrid = document.getElementById('resources-grid');
+    const resultsCount= document.getElementById('results-count');
+
+    async function doSearch() {
+      const p = new URLSearchParams();
+      if (searchInput?.value.trim()) p.set('search', searchInput.value.trim());
+      if (catName) p.set('category', catName);
+      if (levelSel?.value) p.set('level', levelSel.value);
+      if (typeSel?.value)  p.set('resource_type', typeSel.value);
+
+      const overlay = document.getElementById('loading-overlay');
+      overlay?.classList.add('active');
+      try {
+        const r = await fetch(`/api/resources/?${p.toString()}`, { headers: { 'Accept': 'application/json' } });
+        const data = await r.json();
+        const list = Array.isArray(data) ? data : (data.results ?? []);
+        if (resultsCount) resultsCount.textContent = `${list.length} resource${list.length !== 1 ? 's' : ''}`;
+        if (!list.length) {
+          resultsGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>No resources found</h3></div>`;
+          return;
+        }
+        // Reuse the global resourceCardHTML function
+        resultsGrid.innerHTML = list.map((res, i) => resourceCardHTML(res, i)).join('');
+        attachBookmarkListeners(resultsGrid);
+        attachProgressListeners(resultsGrid);
+      } catch (e) { console.error(e); }
+      finally { overlay?.classList.remove('active'); }
+    }
+
+    searchInput?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    searchBtn?.addEventListener('click', doSearch);
+    levelSel?.addEventListener('change', doSearch);
+    typeSel?.addEventListener('change', doSearch);
+
+    doSearch();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Resource Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="bg-canvas"><div class="stars"></div></div>
+
+<div class="auth-page">
+  <div class="auth-card fade-up">
+
+    <div class="auth-logo">
+      <div class="logo-mark">🚀</div>
+      <h2>Career<span style="color:var(--accent-blue)">AI</span></h2>
+      <p>Resource Hub — Sign in to continue</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'users:login' %}">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          class="form-input"
+          placeholder="Enter your username"
+          required
+          autocomplete="username"
+          value="{{ form.username.value|default:'' }}"
+        >
+        {% if form.username.errors %}
+          <p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div style="position:relative">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-input"
+            placeholder="Enter your password"
+            required
+            autocomplete="current-password"
+          >
+          <button type="button" onclick="togglePwd('password')"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px">
+            👁
+          </button>
+        </div>
+        {% if form.password.errors %}
+          <p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.password.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <button type="submit" class="auth-submit">Sign In →</button>
+    </form>
+
+    <div class="auth-footer">
+      Don't have an account?
+      <a href="{% url 'users:register' %}">Create one</a>
+    </div>
+
+    <div class="auth-footer" style="margin-top:10px">
+      <a href="{% url 'resource_hub:index' %}" style="color:var(--text-muted)">
+        ← Continue without login
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function togglePwd(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
+</body>
+</html>

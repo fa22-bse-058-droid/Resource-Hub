@@ -1,0 +1,158 @@
+{% extends "resource_hub/base.html" %}
+{% load static %}
+
+{% block title %}Explore Resources{% endblock %}
+{% block nav_resources_active %}active{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header fade-up">
+  <h1>
+    Learn <span class="gradient-text">Anything</span>, Build Everything
+  </h1>
+  <p>Curated free resources for every stage of your tech career journey</p>
+</div>
+
+<!-- Stats Strip -->
+<div class="stats-strip fade-up fade-up-1">
+  <div class="stat-card">
+    <div class="stat-icon">📚</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_resources|default:"31" }}</div>
+      <div class="stat-label">Total Resources</div>
+    </div>
+    <span class="stat-delta">+1</span>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">🔖</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ bookmark_count|default:"0" }}</div>
+      <div class="stat-label">Bookmarked</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">✅</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ completed_count|default:"0" }}</div>
+      <div class="stat-label">Completed</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">⚡</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ skill_gap_count|default:"0" }}</div>
+      <div class="stat-label">Skill Gaps</div>
+    </div>
+    <a href="{% url 'resource_hub:skill_gaps' %}" style="font-size:11px;color:var(--accent-blue)">View →</a>
+  </div>
+</div>
+
+<!-- Search + Filters -->
+<div class="search-section fade-up fade-up-2">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <div class="search-wrapper" style="flex:1;min-width:280px">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Search resources — Python, React, Machine Learning..."
+        autocomplete="off"
+      >
+    </div>
+    <button id="search-btn" class="btn-primary">
+      🔍 Search
+    </button>
+    <button id="yt-search-btn" class="btn-outline">
+      ▶️ YouTube
+    </button>
+  </div>
+
+  <!-- Filter Row -->
+  <div class="filters-row">
+    <select id="filter-category" class="filter-select">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="filter-level" class="filter-select">
+      <option value="">All Levels</option>
+      <option value="beginner">Beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="advanced">Advanced</option>
+    </select>
+
+    <select id="filter-platform" class="filter-select">
+      <option value="">All Platforms</option>
+      {% for plat in platforms %}
+        <option value="{{ plat }}">{{ plat }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="filter-type" class="filter-select">
+      <option value="">All Types</option>
+      <option value="course">Course</option>
+      <option value="video">Video</option>
+      <option value="article">Article</option>
+      <option value="documentation">Documentation</option>
+      <option value="practice">Practice</option>
+    </select>
+
+    <span class="results-count" id="results-count"></span>
+  </div>
+</div>
+
+<!-- Category Shortcuts -->
+{% if categories %}
+<div class="categories-section fade-up fade-up-3">
+  <div class="section-title">Browse by Category</div>
+  <div class="categories-grid">
+    {% for cat in categories %}
+    <a href="{% url 'resource_hub:category' %}?cat={{ cat }}" class="category-card">
+      <div class="category-icon">
+        {% if cat == "Machine Learning" %}🤖
+        {% elif cat == "Web Development" %}🌐
+        {% elif cat == "Mobile Development" %}📱
+        {% elif cat == "Cloud Computing" %}☁️
+        {% elif cat == "Data Science" %}📊
+        {% elif cat == "Computer Science" %}💻
+        {% elif cat == "Cybersecurity" %}🔐
+        {% else %}📚{% endif %}
+      </div>
+      <div class="category-name">{{ cat }}</div>
+      <div class="category-count">
+        {{ cat_counts|default_if_none:"" }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Resources Grid (filled dynamically by JS) -->
+<div class="fade-up fade-up-4">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div class="section-title">All Resources</div>
+    <div style="display:flex;gap:8px">
+      <a href="{% url 'resource_hub:bookmarks' %}" class="btn-outline" style="font-size:13px;padding:7px 16px">🔖 My Bookmarks</a>
+      <a href="{% url 'resource_hub:skill_gaps' %}" class="btn-outline" style="font-size:13px;padding:7px 16px">⚡ Skill Gaps</a>
+    </div>
+  </div>
+  <div class="resources-grid" id="resources-grid">
+    <!-- JS renders cards here -->
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">⏳</div>
+      <h3>Loading resources...</h3>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube Section (hidden until search) -->
+<div id="yt-section" style="display:none;margin-top:40px" class="fade-up">
+  <div class="section-title" style="margin-bottom:16px">▶️ YouTube Results</div>
+  <div class="youtube-grid" id="yt-grid"></div>
+</div>
+
+{% endblock %}

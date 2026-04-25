@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+app_name = 'resource_hub' 
 urlpatterns = [
     # API endpoints
     path('api/resources/', views.ResourceListView.as_view(), name='resource-list'),
@@ -16,5 +17,5 @@ urlpatterns = [
     path('', views.index_view, name='index'),
     path('category/<str:category>/', views.category_view, name='category'),
     path('bookmarks/', views.bookmarks_view, name='bookmarks'),
-    path('skill-gaps/', views.skill_gaps_view, name='skill-gaps-page'),
+    path('skill-gaps/', views.skill_gaps_view, name='skill_gaps'),   # ← fixed
 ]
