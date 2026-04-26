@@ -11,14 +11,14 @@ def login_view(request):
         user     = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect('index')
+            return redirect('/')  # ← FIXED
         messages.error(request, 'Invalid credentials')
     return render(request, 'users/login.html')
 
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('/users/login/')  # ← FIXED
 
 
 def register_view(request):
@@ -38,6 +38,6 @@ def register_view(request):
 
         user = User.objects.create_user(username=username, password=password, email=email)
         login(request, user)
-        return redirect('index')
+        return redirect('/')
 
     return render(request, 'users/register.html')
